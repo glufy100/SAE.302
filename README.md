@@ -162,8 +162,9 @@ code du rôle concerné, sa configuration, ses lanceurs et sa documentation.
 
 La suite de **55 tests** a réussi sous macOS, dans un venv Python 3.11.9 avec
 PySide6 6.9.2. Elle couvre la conduite, les échanges TCP, la séparation des rôles,
-SQLite et le contenu des paquets. La recette sur deux VM Debian 13 reste à
-exécuter avec la procédure du guide.
+SQLite et le contenu des paquets. Le binôme a également mené des essais sur
+deux VM accessibles via SSH. La recette complète des paquets livrés sous
+Debian 13 reste à confirmer avec la procédure du guide.
 
 ## Données et statistiques
 
