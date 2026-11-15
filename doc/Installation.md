@@ -33,12 +33,12 @@ le port sur Internet.
 
 ### Paquets déjà publiés
 
-Le dossier [dist du dépôt GitHub](https://github.com/glufy100/SAE302main/tree/main/dist)
+Le dossier [dist du dépôt GitHub](https://github.com/glufy100/SAE.302/tree/main/dist)
 contient les deux paquets prêts à transférer vers les VM :
 
-- [Paquet serveur](https://github.com/glufy100/SAE302main/raw/refs/heads/main/dist/sae302-server_1.0.0_all.deb)
-- [Paquet client](https://github.com/glufy100/SAE302main/raw/refs/heads/main/dist/sae302-client_1.0.0_all.deb)
-- [SHA256SUMS](https://github.com/glufy100/SAE302main/raw/refs/heads/main/dist/SHA256SUMS)
+- [Paquet serveur](https://github.com/glufy100/SAE.302/raw/refs/heads/main/dist/sae302-server_1.0.0_all.deb)
+- [Paquet client](https://github.com/glufy100/SAE.302/raw/refs/heads/main/dist/sae302-client_1.0.0_all.deb)
+- [SHA256SUMS](https://github.com/glufy100/SAE.302/raw/refs/heads/main/dist/SHA256SUMS)
 
 Pour vérifier les téléchargements sous Debian, placer ces trois fichiers dans
 le même dossier, puis exécuter `sha256sum -c SHA256SUMS`. Les deux lignes doivent
@@ -250,8 +250,8 @@ sur la VM serveur et `client/` sur la VM client, ou cloner le dépôt complet :
 ```bash
 sudo apt update
 sudo apt install git python3
-git clone https://github.com/glufy100/SAE302main.git
-cd SAE302main
+git clone https://github.com/glufy100/SAE.302.git
+cd SAE.302
 ```
 
 Sur la VM serveur, installer les bindings Qt fournis par Debian puis lancer
@@ -284,7 +284,7 @@ un environnement virtuel à la place des bindings système :
 sudo apt install python3-venv
 python3 -m venv .venv
 . .venv/bin/activate
-python -m pip install -r server/requirements.txt
+python -m pip install -r requirements.txt
 python -m server.carrefour
 ```
 

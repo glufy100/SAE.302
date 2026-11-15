@@ -13,7 +13,9 @@ from client.trajectoire import TrajectoireVehicule as VueCarrefourBase
 
 
 class TraficCroiseTest(unittest.TestCase):
+    """Teste les trajectoires concurrentes et la priorité sur quatre branches."""
     def test_urgence_a_droite_ne_bloque_pas_le_virage_deja_engage(self):
+        """Vérifie qu'une urgence laisse finir un virage déjà engagé."""
         for type_carrefour in ('CROIX', 'T'):
             with self.subTest(type=type_carrefour):
                 geometrie = (47, 893, 470, 268.37, 536.74, 114.2)
@@ -46,6 +48,7 @@ class TraficCroiseTest(unittest.TestCase):
 
     def test_quatre_branches_avec_urgence_et_drainage_complet(self):
         # Cette suite d'arrivees reproduisait un arret permanent apres 3 passages.
+        """Vérifie que l'ensemble des files se vide après l'insertion d'une urgence."""
         hasard = random.Random(3)
         etat = EtatCarrefour()
         geometrie = (47, 893, 470, 268.37, 536.74, 114.2)

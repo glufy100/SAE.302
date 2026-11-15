@@ -9,6 +9,7 @@ class BaseDonnees:
     """Une table suffit pour conserver les passages termines."""
 
     def __init__(self, chemin_sqlite=DB_SQLITE_PATH):
+        """Prépare le fichier SQLite et crée la table des passages si elle manque."""
         self.chemin_sqlite = chemin_sqlite
         self.chemin_sqlite.parent.mkdir(parents=True, exist_ok=True)
         try:

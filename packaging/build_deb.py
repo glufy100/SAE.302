@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parents[1]
 
 
 def tar_gz(files):
+    """Construit une archive tar gzip déterministe avec les modes de fichiers fournis."""
     output = io.BytesIO()
     with tarfile.open(fileobj=output, mode="w", format=tarfile.USTAR_FORMAT) as archive:
         directories = set()
@@ -38,6 +39,7 @@ def tar_gz(files):
 
 
 def write_ar(path, members):
+    """Écrit les membres du paquet Debian au format ar, avec leur octet de bourrage."""
     with path.open("wb") as output:
         output.write(b"!<arch>\n")
         for name, content in members:
@@ -49,6 +51,7 @@ def write_ar(path, members):
 
 
 def launcher(role, command, database=False):
+    """Génère un lanceur qui charge la configuration du rôle avant d'exécuter sa commande."""
     lines = ["#!/bin/sh", "set -eu", "set -a",
              f". /etc/sae302/{role}.conf", "set +a",
              "export PYTHONDONTWRITEBYTECODE=1", "export PYTHONUNBUFFERED=1"]
@@ -59,10 +62,12 @@ def launcher(role, command, database=False):
 
 
 def build(role, version, output):
+    """Assemble le paquet d'un rôle et renvoie le chemin du fichier Debian."""
     package = f"sae302-{role}"
     files = {}
 
     def add(name, content, mode=0o644):
+        """Place un fichier et son mode dans la liste des fichiers à installer."""
         files[name] = (content, mode)
 
     # Liste blanche : ne jamais embarquer caches, environnements ou bases SQLite.
@@ -103,7 +108,7 @@ Architecture: all
 Maintainer: Equipe SAE302 <sae302@localhost>
 Depends: {dependencies}
 Installed-Size: {size}
-Homepage: https://github.com/glufy100/SAE302main
+Homepage: https://github.com/glufy100/SAE.302
 Description: {description}
  Simulation pedagogique de carrefours en croix et en T sur reseau local.
 """.encode()
@@ -119,6 +124,7 @@ Description: {description}
 
 
 def main():
+    """Valide les options, construit les deux paquets et écrit leurs empreintes SHA-256."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--version", default="1.0.0")
     parser.add_argument("--output", type=Path, default=ROOT / "dist")

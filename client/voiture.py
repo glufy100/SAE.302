@@ -13,6 +13,7 @@ else:
 
 
 def simuler_voiture(numero: int, carrefour: str = "CROIX"):
+    """Choisit un trajet autorisé pour un numéro puis simule la voiture correspondante."""
     trajets = get_trajets(carrefour)
     directions = tuple(trajets)
     direction = directions[(numero - 1) % len(directions)]
@@ -22,6 +23,7 @@ def simuler_voiture(numero: int, carrefour: str = "CROIX"):
 
 
 def main():
+    """Démarre les voitures en parallèle à la densité demandée jusqu'à l'interruption."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("densite", nargs="?", type=int, default=3)
     parser.add_argument("--carrefour", type=str.upper, choices=("CROIX", "T"), default="CROIX")

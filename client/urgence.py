@@ -11,6 +11,7 @@ else:
 
 
 def main():
+    """Lance un véhicule prioritaire ou un générateur d'ambulances selon les arguments."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("nom", nargs="?", default="Ambulance")
     parser.add_argument("direction", nargs="?", type=str.upper)

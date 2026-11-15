@@ -18,6 +18,7 @@ spec.loader.exec_module(builder)
 
 
 def read_deb(path):
+    """Lit les membres d'un paquet Debian au format ar."""
     data = path.read_bytes()
     if data[:8] != b"!<arch>\n":
         raise AssertionError("Archive ar attendue")
@@ -35,13 +36,16 @@ def read_deb(path):
 
 
 def unpack(data):
+    """Ouvre les métadonnées et les fichiers d'un paquet pour en vérifier le contenu."""
     with tarfile.open(fileobj=io.BytesIO(data), mode="r:gz") as archive:
         return {entry.name.removeprefix("./"): (archive.extractfile(entry).read(), entry)
                 for entry in archive.getmembers() if entry.isfile()}
 
 
 class TestPaquetsDebian(unittest.TestCase):
+    """Valide la construction et la configuration des paquets client et serveur."""
     def test_archives_roles_permissions_et_configuration(self):
+        """Vérifie la reproductibilité, les permissions et la séparation des fichiers par rôle."""
         with tempfile.TemporaryDirectory() as temporary:
             for role, other in (("server", "client"), ("client", "server")):
                 with self.subTest(role=role):
@@ -73,6 +77,7 @@ class TestPaquetsDebian(unittest.TestCase):
                     self.assertEqual(path.read_bytes(), previous)
 
     def test_configuration_externe_et_sqlite_hors_du_code(self):
+        """Vérifie la prise en compte des variables d'environnement et du chemin SQLite."""
         environment = dict(os.environ, SAE302_HOST="192.0.2.10", SAE302_PORT="54321",
                            SAE302_BIND_HOST="192.0.2.20", SAE302_DB_PATH="/tmp/sae302-test.sqlite3")
         result = subprocess.run([sys.executable, "-c", """

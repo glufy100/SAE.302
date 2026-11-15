@@ -15,6 +15,7 @@ else:
 
 
 class TrajectoireVehicule:
+    """Calcule les poses, les contours balayés et les conflits entre trajectoires."""
     ECART_FILE = 6
     ECART_LIGNE = 3
     CONTOUR_VEHICULE = 1

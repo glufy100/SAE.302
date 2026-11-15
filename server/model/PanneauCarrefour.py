@@ -7,6 +7,7 @@ class PanneauCarrefour(QWidget):
     """Associe une vue aux compteurs communs aux deux carrefours."""
 
     def __init__(self, etat: EtatCarrefour, vue):
+        """Dispose la vue et les compteurs, puis les relie aux mises à jour de l'état."""
         super().__init__()
         self.etat = etat
         self.vue = vue

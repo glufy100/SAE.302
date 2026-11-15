@@ -11,7 +11,9 @@ from client.trajectoire import TrajectoireVehicule as VueCarrefourBase
 
 
 class FilesVehiculesTest(unittest.TestCase):
+    """Contrôle l'espacement des files et la géométrie utilisée pour calculer les distances."""
     def test_ecart_de_la_file_reste_inferieur_a_une_voiture(self):
+        """Vérifie que le vide entre deux véhicules d'une file reste inférieur à leur longueur."""
         for largeur, hauteur in ((700, 500), (1000, 600), (1400, 800), (1400, 500)):
             geometrie = (largeur * .05, largeur * .95, largeur / 2,
                          hauteur * .47, hauteur * .94, min(largeur, hauteur) * .2)
@@ -32,6 +34,7 @@ class FilesVehiculesTest(unittest.TestCase):
                             self.assertLess(ecart, longueur)
 
     def test_clients_utilise_la_distance_pour_creer_et_avancer(self):
+        """Vérifie l'application de la distance de sécurité à l'arrivée et au déplacement."""
         etat = EtatCarrefour()
         etat.distances_affichage["T"] = {"S": 6}
         clients = ClientsSimulation(etat)
@@ -49,6 +52,7 @@ class FilesVehiculesTest(unittest.TestCase):
         self.assertEqual(-5, suivante.progression)
 
     def test_redimensionnement_respecte_les_deux_vues(self):
+        """Contrôle les distances pour plusieurs tailles dans la croix et le T."""
         etat = EtatCarrefour()
         etat.distances_affichage = {"T": {"S": 6}, "Croix": {"S": 7, "N": 8}}
         with etat.verrou:

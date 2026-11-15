@@ -13,6 +13,7 @@ class EtatCarrefour(QObject):
     change = Signal()
 
     def __init__(self, base_donnees: BaseDonnees | None = None, type_carrefour: str = "CROIX"):
+        """Initialise les trajets, les feux, la révision et les compteurs du carrefour."""
         if not isinstance(base_donnees, (BaseDonnees, type(None))):
             raise TypeError("base_donnees doit etre une instance de BaseDonnees ou None")
         if type_carrefour not in ("CROIX", "T"):

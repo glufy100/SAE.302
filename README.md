@@ -6,9 +6,65 @@ Les véhicules normaux et prioritaires échangent avec le carrefour par sockets 
 Le passage d'une ambulance, d'un pompier ou d'un véhicule de police déclenche une
 adaptation des feux.
 
+## Équipe
+
+**Groupe Jedi** · Louis Erb et Maxence Nordmann
+
+## Installer et lancer depuis les sources
+
+Il faut Git, Python 3.11 à 3.13 et une session graphique pour le serveur.
+L'installation locale a été vérifiée avec Python 3.11.9 sous macOS. Le
+déploiement prévu sur deux VM utilise Python 3.13 sous Debian 13.
+
+Sous macOS ou Linux, ouvrir un premier terminal pour installer les dépendances
+et démarrer le serveur :
+
+```bash
+git clone https://github.com/glufy100/SAE.302.git
+cd SAE.302
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+SAE302_BIND_HOST=127.0.0.1 python -m server.carrefour
+```
+
+Dans un deuxième terminal, depuis le dossier `SAE.302`, générer des voitures et
+des ambulances sur les deux carrefours :
+
+```bash
+source .venv/bin/activate
+bash client/lancer_simulation.sh 3 0.4
+```
+
+Pour lancer le serveur et les générateurs avec une seule commande, activer le
+venv puis exécuter `SAE302_BIND_HOST=127.0.0.1 bash lancer_simulation.sh 3 0.4`.
+
+Sous Windows PowerShell, utiliser directement le Python du venv :
+
+```powershell
+git clone https://github.com/glufy100/SAE.302.git
+cd SAE.302
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+$env:SAE302_BIND_HOST = "127.0.0.1"
+.\.venv\Scripts\python.exe -m server.carrefour
+```
+
+Dans deux autres terminaux PowerShell ouverts dans `SAE.302`, lancer
+`.\.venv\Scripts\python.exe -m client.voiture 3 --carrefour T`, puis
+`.\.venv\Scripts\python.exe -m client.urgence Ambulance S DROITE --carrefour T`.
+Ces commandes font circuler des voitures sur le T et déclenchent le passage
+d'une ambulance depuis le sud.
+
+Le client cible `127.0.0.1:5050` par défaut. Pour joindre un serveur distant,
+définir `SAE302_HOST` sur le client avec l'IP du serveur et donner la même
+valeur à `SAE302_PORT` des deux côtés si le port change. Le serveur doit écouter
+sur son interface réseau accessible aux clients. Le [guide Debian](doc/Installation.md)
+détaille les réglages pour deux VM.
+
 ## Architecture
 
-Le déploiement utilise **deux VM Debian 13 séparées** :
+Le déploiement cible utilise **deux VM Debian 13 séparées** :
 
 | VM | Composants | Prérequis |
 |---|---|---|
@@ -25,8 +81,8 @@ leurs compteurs, accessibles sur un seul port TCP : **5050** par défaut.
 
 Les deux paquets sont disponibles dans [dist/](dist/) :
 
-- [Télécharger le serveur](https://github.com/glufy100/SAE302main/raw/refs/heads/main/dist/sae302-server_1.0.0_all.deb)
-- [Télécharger le client](https://github.com/glufy100/SAE302main/raw/refs/heads/main/dist/sae302-client_1.0.0_all.deb)
+- [Télécharger le serveur](https://github.com/glufy100/SAE.302/raw/refs/heads/main/dist/sae302-server_1.0.0_all.deb)
+- [Télécharger le client](https://github.com/glufy100/SAE.302/raw/refs/heads/main/dist/sae302-client_1.0.0_all.deb)
 - [Empreintes SHA-256](dist/SHA256SUMS)
 
 Copier chaque paquet sur la VM correspondante. Dans le dossier contenant le
@@ -69,13 +125,13 @@ les mises à jour et la désinstallation.
 
 ## Commandes des véhicules
 
-| Commande | Résultat |
-|---|---|
-| `sae302-client 3 0.4` | Voitures et ambulances sur les deux carrefours |
-| `sae302-client 3 0.4 T` | Trafic uniquement sur le T |
-| `sae302-client 3 0 CROIX` | Voitures uniquement sur la croix |
-| `sae302-voiture 3 --carrefour T` | Générateur de voitures pour le T |
-| `sae302-urgence Ambulance S DROITE --carrefour T` | Une ambulance entrant par le sud du T |
+| Exemple | Depuis les sources avec le venv activé | Avec les paquets Debian |
+|---|---|---|
+| Voitures et ambulances sur les deux carrefours | `bash client/lancer_simulation.sh 3 0.4` | `sae302-client 3 0.4` |
+| Trafic sur le T | `bash client/lancer_simulation.sh 3 0.4 T` | `sae302-client 3 0.4 T` |
+| Voitures seules sur la croix | `bash client/lancer_simulation.sh 3 0 CROIX` | `sae302-client 3 0 CROIX` |
+| Générateur de voitures pour le T | `python -m client.voiture 3 --carrefour T` | `sae302-voiture 3 --carrefour T` |
+| Une ambulance entrant par le sud du T | `python -m client.urgence Ambulance S DROITE --carrefour T` | `sae302-urgence Ambulance S DROITE --carrefour T` |
 
 Le premier argument du lanceur est une densité de voitures entière, au moins 1.
 Le deuxième est une densité d'urgences entre 0 et 1. Le troisième vaut `TOUS`,
@@ -85,52 +141,29 @@ Les générateurs demandent au serveur les trajets autorisés.
 
 Arrêter les générateurs avec `Ctrl+C`, puis fermer la fenêtre du serveur.
 
-## Développer depuis les sources
-
-```bash
-git clone https://github.com/glufy100/SAE302main.git
-cd SAE302main
-python3 -m venv .venv
-. .venv/bin/activate
-python -m pip install -r requirements.txt
-python -m server.carrefour
-```
-
-Dans un autre terminal, depuis la racine du dépôt :
-
-```bash
-# Si le serveur se trouve sur une autre VM, adapter cette adresse.
-export SAE302_HOST=127.0.0.1
-bash client/lancer_simulation.sh 3 0.4
-```
-
 Le dossier `client/` peut être copié seul sur la VM des véhicules et utilisé avec
 Python standard. Les lancements directs lisent les variables d'environnement et
 les valeurs de repli des modules `config.py`. Les fichiers `/etc/sae302/*.conf`
 sont chargés uniquement par les lanceurs des paquets Debian.
 Les réglages de conduite sont définis dans `client/config.py`.
 
-Pour le développement sur une seule machine, `bash lancer_simulation.sh 3 0.4`
-lance le serveur et les générateurs. Le [guide](doc/Installation.md) présente aussi
-l'installation depuis les sources avec les bindings Qt fournis par Debian.
-
 ## Construire les paquets et tester
 
-Depuis la racine du dépôt :
+Depuis la racine du dépôt, avec le venv activé :
 
 ```bash
-python3 packaging/build_deb.py
-python3 -m unittest discover -s tests
+python packaging/build_deb.py
+python -m unittest discover -s tests
 ```
 
 Le constructeur utilise Python standard, fonctionne sous Linux et macOS et produit
 les deux `.deb` ainsi que `dist/SHA256SUMS`. Les paquets contiennent uniquement le
 code du rôle concerné, sa configuration, ses lanceurs et sa documentation.
 
-La suite de **55 tests** a été exécutée avec succès sous macOS, Python 3.11.9 et
+La suite de **55 tests** a réussi sous macOS, dans un venv Python 3.11.9 avec
 PySide6 6.9.2. Elle couvre la conduite, les échanges TCP, la séparation des rôles,
-SQLite et le contenu des paquets. **L'installation et le fonctionnement sur les
-deux VM Debian 13 restent à valider** avec la procédure du guide.
+SQLite et le contenu des paquets. La recette sur deux VM Debian 13 reste à
+exécuter avec la procédure du guide.
 
 ## Données et statistiques
 
@@ -144,6 +177,8 @@ terminés : type de véhicule, direction et temps d'attente.
 
 ## Documentation
 
+- [Bilan du projet](Bilan_Projet.pdf)
+- [Annexe IA-graphie](IAGraphie.pdf)
 - [Installation sur deux VM Debian 13](doc/Installation.md)
 - [Documentation technique et diagrammes UML](doc/Documentation_Technique.md)
 - [Commandes et modules clients](client/README.md)

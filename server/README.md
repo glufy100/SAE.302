@@ -2,7 +2,7 @@
 
 ## Paquet Debian 13 — VM serveur
 
-[Télécharger le paquet server](https://github.com/glufy100/SAE302main/raw/refs/heads/main/dist/sae302-server_1.0.0_all.deb), puis se placer dans le dossier du téléchargement.
+[Télécharger le paquet serveur](https://github.com/glufy100/SAE.302/raw/refs/heads/main/dist/sae302-server_1.0.0_all.deb), puis se placer dans le dossier du téléchargement.
 
 La VM serveur doit disposer d'un bureau graphique. Dans un terminal de cette session :
 
@@ -62,11 +62,11 @@ Les messages sont des lignes `COMMANDE|contenu`. Les rapports et instantanes uti
 
 | Commande | Role |
 |---|---|
-| `CARREFOUR|T` | Selectionne le T avant l'inscription ; la croix est selectionnee par defaut |
+| `CARREFOUR\|T` | Selectionne le T avant l'inscription ; la croix est selectionnee par defaut |
 | `GET_TRAJETS` | Transmet les branches et manoeuvres permises par l'infrastructure |
 | `INSTANTANE` | Renvoie feux, priorite, scene, rapports des voitures et revision du trafic |
-| `IDENTITE|{revision, vehicule}` | Enregistre l'identite et la place de depart calculee par le client |
-| `POSITION|{revision, vehicule}` | Enregistre l'etat complet calcule par le client |
+| `IDENTITE\|{revision, vehicule}` | Enregistre l'identite et la place de depart calculee par le client |
+| `POSITION\|{revision, vehicule}` | Enregistre l'etat complet calcule par le client |
 | `URGENCE` | Modifie les feux pour un vehicule prioritaire |
 | `TERMINE` | Enregistre un passage termine dans SQLite et confirme par `OK` |
 

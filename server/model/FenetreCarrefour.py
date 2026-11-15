@@ -10,6 +10,7 @@ class FenetreCarrefour(QMainWindow):
     """Fenetre principale de la simulation."""
 
     def __init__(self, etat: EtatCarrefour, serveur: ServeurCarrefour):
+        """Installe le panneau de la croix et démarre le minuteur du cycle des feux."""
         if not isinstance(etat, EtatCarrefour):
             raise TypeError("etat doit etre une instance de EtatCarrefour")
         if not isinstance(serveur, ServeurCarrefour):

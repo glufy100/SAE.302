@@ -12,7 +12,9 @@ from client.trajectoire import TrajectoireVehicule as VueCarrefourBase
 
 
 class AttenteGaucheTest(unittest.TestCase):
+    """Valide le tourne-à-gauche et la circulation de la file pendant son attente."""
     def test_la_file_tout_droit_passe_pendant_l_attente_a_gauche(self):
+        """Vérifie que la file tout droit dépasse le véhicule en attente."""
         for taille in ((700, 500), (1000, 600), (1400, 500)):
             for type_carrefour, direction in (('CROIX', 'N'), ('CROIX', 'S'),
                                               ('CROIX', 'E'), ('CROIX', 'O'), ('T', 'E')):
@@ -53,6 +55,7 @@ class AttenteGaucheTest(unittest.TestCase):
                     self.assertEqual(100, gauche.progression)
 
     def verifier_separation(self, etat, geometrie, haut):
+        """Contrôle que les contours des véhicules restent distincts."""
         voitures = [v for v in etat.vehicules.values() if v.progression < 100]
         contours = [TrajectoireVehicule.contour(v, geometrie, haut) for v in voitures]
         for index, contour in enumerate(contours):
@@ -60,6 +63,7 @@ class AttenteGaucheTest(unittest.TestCase):
                 self.assertFalse(contour.intersects(autre))
 
     def test_virage_inaccessible_au_rouge(self):
+        """Vérifie que le feu rouge retient une voiture avant le virage."""
         etat = EtatCarrefour()
         voiture = Vehicule('Gauche', 'voiture', 'E', '1', manoeuvre='GAUCHE', progression=LIGNE_ARRET)
         etat.vehicules[voiture.nom] = voiture
@@ -71,6 +75,7 @@ class AttenteGaucheTest(unittest.TestCase):
         client.sendall.assert_called_with(b'ATTENTE\n')
 
     def test_voiture_rangee_libere_le_carrefour_a_la_fin_du_vert(self):
+        """Vérifie que la voiture rangée libère le croisement au changement de phase."""
         geometrie = (50, 950, 500, 282, 564, 120)
         for direction, opposee in (('N', 'S'), ('S', 'N'), ('E', 'O'), ('O', 'E')):
             with self.subTest(direction=direction):
@@ -98,6 +103,7 @@ class AttenteGaucheTest(unittest.TestCase):
                 self.assertTrue(etat.phase.endswith('VERT'))
 
     def test_attente_deja_inclinee_dans_le_virage(self):
+        """Vérifie l'inclinaison du véhicule à sa position d'attente dans le virage."""
         geometrie = (50, 950, 500, 282, 564, 120)
         for type_carrefour, haut in (('CROIX', 36), ('T', None)):
             etat = EtatCarrefour(type_carrefour=type_carrefour)
@@ -117,6 +123,7 @@ class AttenteGaucheTest(unittest.TestCase):
 
     def test_virage_conserve_les_points_de_la_courbe_d_origine(self):
         # Positions de reference du virage nord -> est, avant l'ajout du rangement.
+        """Vérifie que l'attente conserve la géométrie du virage d'origine."""
         positions = {
             30: (470.0, 196.5),
             40: (479.609375, 239.859375),

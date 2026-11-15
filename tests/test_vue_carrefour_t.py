@@ -8,7 +8,9 @@ from client.trajectoire import TrajectoireVehicule as VueCarrefourT
 
 
 class TrajectoiresCarrefourTTest(unittest.TestCase):
+    """Vérifie la géométrie des voies, des arrêts et des trajets du T."""
     def position(self, direction, manoeuvre, progression, largeur=1000, hauteur=600):
+        """Calcule la pose d'un véhicule de test à une progression donnée."""
         voiture = Vehicule("Test", "voiture", direction, "1",
                            manoeuvre=manoeuvre, progression=progression)
         return VueCarrefourT._position_vehicule(
@@ -17,6 +19,7 @@ class TrajectoiresCarrefourTTest(unittest.TestCase):
         )
 
     def test_trajets_continus_sur_les_voies_aux_differentes_tailles(self):
+        """Vérifie que les trajets restent sur les voies aux tailles testées."""
         trajets = (("E", "TOUT_DROIT"), ("E", "GAUCHE"),
                    ("O", "TOUT_DROIT"), ("O", "DROITE"),
                    ("S", "GAUCHE"), ("S", "DROITE"))
@@ -39,6 +42,7 @@ class TrajectoiresCarrefourTTest(unittest.TestCase):
                         precedente = position
 
     def test_voitures_approchent_et_quittent_le_carrefour(self):
+        """Vérifie le déplacement avant et après le centre du T."""
         for direction, manoeuvre in (("E", "TOUT_DROIT"), ("O", "DROITE"), ("S", "GAUCHE")):
             debut = self.position(direction, manoeuvre, 0)[0]
             arret = self.position(direction, manoeuvre, 30)[0]
@@ -49,6 +53,7 @@ class TrajectoiresCarrefourTTest(unittest.TestCase):
         self.assertGreater(self.position("E", "TOUT_DROIT", -20)[0].x(), 950)
 
     def test_arret_juste_avant_la_ligne_sur_les_trois_branches(self):
+        """Vérifie l'arrêt devant la ligne sur les branches sud, est et ouest."""
         for largeur, hauteur in ((700, 500), (1000, 600), (1400, 800), (400, 300)):
             epaisseur = min(largeur, hauteur) * 0.2
             demi = epaisseur / 2
@@ -71,6 +76,7 @@ class TrajectoiresCarrefourTTest(unittest.TestCase):
                     self.assertAlmostEqual(3.0, ecart)
 
     def test_branche_nord_absente_du_t(self):
+        """Vérifie qu'un trajet nord n'a aucune pose sur le T."""
         self.assertIsNone(self.position("N", "TOUT_DROIT", 40))
         self.assertIsNone(self.position("S", "TOUT_DROIT", 60))
         self.assertIsNone(self.position("E", "DROITE", 60))

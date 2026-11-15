@@ -7,7 +7,9 @@ from client.trajectoire import TrajectoireVehicule as VueCarrefour
 
 
 class PositionArretTest(unittest.TestCase):
+    """Vérifie l'arrêt et la continuité des virages du carrefour en croix."""
     def test_arret_sur_les_quatre_branches_et_tailles(self):
+        """Vérifie la position d'arrêt pour plusieurs dimensions de la croix."""
         for largeur, hauteur in ((700, 500), (1000, 600), (1400, 800)):
             epaisseur = min(largeur, hauteur) * 0.2
             cx, cy = largeur / 2, hauteur * 0.47
@@ -28,6 +30,7 @@ class PositionArretTest(unittest.TestCase):
                     self.assertAlmostEqual(3.0, ecarts[direction])
 
     def test_tous_les_virages_sont_continus(self):
+        """Vérifie la continuité des positions entre l'entrée, le virage et la sortie."""
         geometrie = (50, 950, 500, 282, 564, 120)
         for direction in ("N", "S", "E", "O"):
             for manoeuvre in ("TOUT_DROIT", "GAUCHE", "DROITE"):

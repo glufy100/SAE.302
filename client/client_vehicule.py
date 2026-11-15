@@ -20,24 +20,32 @@ def _get_parametres_simulation():
 
 
 def get_ligne_arret():
+    """Renvoie la progression correspondant à la ligne d'arrêt."""
     return _get_parametres_simulation()[0]
 
 
 def get_pas_avancement():
+    """Renvoie le nombre de points proposés à chaque pas de conduite."""
     return _get_parametres_simulation()[1]
 
 
 def get_pas_simulation():
+    """Renvoie le délai en secondes entre deux publications acceptées."""
     return _get_parametres_simulation()[2]
 
 
 def prochaine_position(position, feu, pas_avancement=PAS_AVANCEMENT, ligne_arret=LIGNE_ARRET):
+    """Calcule un pas borné par la ligne d'arrêt au rouge et par la sortie."""
     if feu != 'VERT' and position <= ligne_arret:
         return min(position + pas_avancement, ligne_arret)
     return min(position + pas_avancement, 100)
 
 
 def echanger(client, lecteur, message):
+    """Envoie une commande UTF-8 et décompose la réponse du serveur.
+
+    Lève une erreur si le serveur ferme la connexion ou répond ERREUR.
+    """
     client.sendall((message + '\n').encode('utf-8'))
     reponse = lecteur.readline()
     if not reponse:
@@ -49,12 +57,14 @@ def echanger(client, lecteur, message):
 
 
 def selectionner(client, lecteur, carrefour):
+    """Sélectionne le carrefour avant l'inscription, la croix étant le choix par défaut."""
     if carrefour != 'CROIX' and echanger(client, lecteur, f'CARREFOUR|{carrefour}') != ['OK']:
         raise ValueError('Impossible de selectionner le carrefour')
 
 
 @lru_cache(maxsize=2)
 def get_trajets(carrefour='CROIX'):
+    """Récupère et mémorise les manœuvres autorisées pour chaque entrée du carrefour."""
     with socket.create_connection((HOST, PORT), timeout=10) as client:
         with client.makefile('r', encoding='utf-8') as lecteur:
             selectionner(client, lecteur, carrefour)
@@ -65,6 +75,7 @@ def get_trajets(carrefour='CROIX'):
 
 
 def recevoir_instantane(client, lecteur):
+    """Demande au serveur l'état courant du carrefour et décode le JSON."""
     reponse = echanger(client, lecteur, 'INSTANTANE')
     if reponse[0] != 'INSTANTANE':
         raise ValueError('Instantane invalide')
@@ -72,11 +83,16 @@ def recevoir_instantane(client, lecteur):
 
 
 def publier(client, lecteur, commande, vehicule, revision):
+    """Envoie un rapport complet de véhicule avec la révision utilisée pour son calcul."""
     paquet = {'revision': revision, 'vehicule': asdict(vehicule)}
     return echanger(client, lecteur, commande + '|' + json.dumps(paquet))
 
 
 def simuler_vehicule(nom, type_vehicule, direction, manoeuvre, carrefour='CROIX'):
+    """Inscrit un véhicule, publie chacun de ses pas et signale sa sortie.
+
+    Recalcule le mouvement si le serveur signale une révision périmée.
+    """
     try:
         delai = get_pas_simulation()
         with socket.create_connection((HOST, PORT), timeout=10) as client:
@@ -85,6 +101,7 @@ def simuler_vehicule(nom, type_vehicule, direction, manoeuvre, carrefour='CROIX'
                 while True:
                     instantane = recevoir_instantane(client, lecteur)
                     vehicule = proposer_arrivee(nom, type_vehicule, direction, manoeuvre, instantane)
+                    # La place proposée reste valable tant que la révision est inchangée.
                     reponse = publier(client, lecteur, 'IDENTITE', vehicule, instantane['revision'])
                     if reponse == ['OK']:
                         break

@@ -11,7 +11,9 @@ from client.trajectoire import TrajectoireVehicule as VueCarrefourBase
 
 
 class PassageAmbulanceTest(unittest.TestCase):
+    """Valide le passage de l'ambulance, le rangement et la réinsertion des voitures."""
     def verifier_separation(self, etat, geometrie, haut):
+        """Contrôle la séparation des contours pour les géométries du scénario."""
         contours = [TrajectoireVehicule.contour(v, geometrie, haut)
                     for v in etat.vehicules.values() if v.progression < 100]
         for index, contour in enumerate(contours):
@@ -19,6 +21,7 @@ class PassageAmbulanceTest(unittest.TestCase):
                 self.assertFalse(contour.intersects(autre))
 
     def test_ambulance_depasse_la_file_puis_les_voitures_repartent(self):
+        """Vérifie que l'ambulance traverse sans bloquer la reprise de la circulation."""
         for taille in ((700, 500), (1000, 600)):
             for type_carrefour, direction in (('CROIX', 'N'), ('CROIX', 'S'), ('CROIX', 'E'),
                                               ('CROIX', 'O'), ('T', 'S'), ('T', 'E'), ('T', 'O')):
@@ -69,6 +72,7 @@ class PassageAmbulanceTest(unittest.TestCase):
                     self.assertTrue(all(v.decalage_urgence == 0 for v in voitures))
 
     def test_retour_sur_la_voie_meme_si_le_feu_est_rouge(self):
+        """Vérifie le retour latéral sur la voie quand le feu est rouge."""
         etat = EtatCarrefour()
         voiture = Vehicule('Rangee', 'voiture', 'E', '1', progression=30, decalage_urgence=1)
         etat.vehicules[voiture.nom] = voiture
@@ -82,6 +86,7 @@ class PassageAmbulanceTest(unittest.TestCase):
         client.sendall.assert_called_with(b'ATTENTE\n')
 
     def test_voiture_deja_engagee_finit_son_passage(self):
+        """Vérifie qu'une voiture engagée peut libérer le croisement pendant l'urgence."""
         etat = EtatCarrefour()
         voiture = Vehicule('Engagee', 'voiture', 'N', '1', progression=75, engagee=True)
         ambulance = Vehicule('Urgence', 'urgence', 'N', 'U', progression=0, prioritaire=True)
@@ -92,6 +97,7 @@ class PassageAmbulanceTest(unittest.TestCase):
         self.assertEqual(0, voiture.decalage_urgence)
 
     def test_urgence_pendant_la_preparation_d_un_depassement(self):
+        """Teste l'arrivée d'une urgence pendant le décalage d'un dépassement."""
         geometrie = (50, 950, 500, 282, 564, 120)
         etat = EtatCarrefour()
         etat.distances_affichage['test'] = VueCarrefourBase._distances_securite(geometrie, 36)
@@ -117,6 +123,7 @@ class PassageAmbulanceTest(unittest.TestCase):
         self.assertEqual(30, opposee.progression)
 
     def test_voiture_normale_reste_derriere_une_voiture_rangee(self):
+        """Vérifie qu'une voiture ordinaire reste derrière la voiture en refuge."""
         for type_carrefour, direction, manoeuvre in (
                 ('CROIX', 'N', 'TOUT_DROIT'), ('CROIX', 'S', 'TOUT_DROIT'),
                 ('T', 'S', 'DROITE'), ('T', 'E', 'TOUT_DROIT'), ('T', 'O', 'TOUT_DROIT')):
@@ -146,6 +153,7 @@ class PassageAmbulanceTest(unittest.TestCase):
                 self.assertEqual((100, 100), (rangee.progression, suivante.progression))
 
     def test_deux_urgences_successives_ne_coincent_pas_la_file(self):
+        """Vérifie que la file repart après deux véhicules prioritaires successifs."""
         geometrie = (50, 950, 500, 282, 564, 120)
         etat = EtatCarrefour(type_carrefour='T')
         etat.geometries_affichage['test'] = (geometrie, None)

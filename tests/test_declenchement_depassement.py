@@ -11,7 +11,9 @@ from client.trajectoire import TrajectoireVehicule as VueCarrefourBase
 
 
 class DeclenchementDepassementTest(unittest.TestCase):
+    """Contrôle les conditions et la continuité d'un dépassement par la droite."""
     def configurer(self, direction, manoeuvre_devant):
+        """Prépare une voiture de tête et une voiture suiveuse pour le scénario."""
         etat = EtatCarrefour()
         geometrie = (50, 950, 500, 282, 564, 120)
         etat.geometries_affichage['test'] = (geometrie, 36)
@@ -27,6 +29,7 @@ class DeclenchementDepassementTest(unittest.TestCase):
         return etat, ClientsSimulation(etat), derriere, devant, geometrie
 
     def test_pas_de_decalage_derriere_un_virage_a_droite_ou_un_tout_droit(self):
+        """Vérifie que seuls les tourne-à-gauche peuvent déclencher un dépassement."""
         for direction in ('N', 'S', 'E', 'O'):
             for manoeuvre in ('DROITE', 'TOUT_DROIT'):
                 with self.subTest(direction=direction, manoeuvre=manoeuvre):
@@ -41,6 +44,7 @@ class DeclenchementDepassementTest(unittest.TestCase):
                                      TrajectoireVehicule._position_vehicule(voiture, *geometrie, 36))
 
     def test_depassement_prepare_si_la_voiture_juste_devant_est_engagee(self):
+        """Vérifie le déclenchement derrière la voiture déjà engagée à gauche."""
         for direction in ('N', 'S', 'E', 'O'):
             with self.subTest(direction=direction):
                 etat, clients, voiture, devant, _ = self.configurer(direction, 'GAUCHE')
@@ -54,6 +58,7 @@ class DeclenchementDepassementTest(unittest.TestCase):
                 self.assertLess(voiture.preparation_depassement, 1)
 
     def test_pas_de_preparation_loin_de_la_ligne(self):
+        """Vérifie que la préparation reste limitée aux abords de la ligne d'arrêt."""
         etat, clients, voiture, devant, geometrie = self.configurer('S', 'GAUCHE')
         devant.progression = 40
         devant.engagee = True
@@ -66,6 +71,7 @@ class DeclenchementDepassementTest(unittest.TestCase):
                          TrajectoireVehicule._position_vehicule(voiture, *geometrie, 36))
 
     def test_pas_de_decalage_avant_l_engagement_suffisant_du_virage(self):
+        """Vérifie que la voiture suiveuse attend que le virage soit suffisamment engagé."""
         for progression in (30, 31, 35, 39):
             with self.subTest(progression=progression):
                 etat, clients, voiture, devant, _ = self.configurer('S', 'GAUCHE')
@@ -77,6 +83,7 @@ class DeclenchementDepassementTest(unittest.TestCase):
                 self.assertFalse(voiture.depassement_droite)
 
     def test_pas_de_decalage_au_rouge_meme_si_le_virage_est_engage(self):
+        """Vérifie que la préparation reste bloquée au rouge."""
         etat, clients, voiture, devant, _ = self.configurer('S', 'GAUCHE')
         devant.progression = 40
         devant.engagee = True
@@ -85,6 +92,7 @@ class DeclenchementDepassementTest(unittest.TestCase):
         self.assertFalse(voiture.depassement_droite)
 
     def test_decalage_progressif_sans_saut_ni_avance_pendant_la_preparation(self):
+        """Vérifie la continuité du décalage à progression longitudinale fixe."""
         etat, clients, voiture, devant, geometrie = self.configurer('S', 'GAUCHE')
         devant.progression = 40
         devant.engagee = True
@@ -100,6 +108,7 @@ class DeclenchementDepassementTest(unittest.TestCase):
         self.assertEqual(1, voiture.preparation_depassement)
 
     def test_pas_de_depassement_d_une_ambulance_qui_tourne_a_gauche(self):
+        """Vérifie que l'ambulance garde la priorité pendant son tourne-à-gauche."""
         _, clients, voiture, devant, _ = self.configurer('N', 'GAUCHE')
         devant.prioritaire = True
         clients._avancer_vehicule(Mock(), voiture, 11)

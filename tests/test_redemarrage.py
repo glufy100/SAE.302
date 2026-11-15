@@ -12,7 +12,9 @@ from client.trajectoire import TrajectoireVehicule as VueCarrefourBase
 
 
 class RedemarrageTest(unittest.TestCase):
+    """Valide la reprise des files et des croisements après un arrêt."""
     def test_distance_conservee_pour_deux_voitures_dans_la_meme_file(self):
+        """Vérifie que deux voitures conservent leur séparation au redémarrage."""
         etat = EtatCarrefour()
         etat.distances_affichage['test'] = {'S': 6}
         premiere = Vehicule('Premiere', 'voiture', 'S', '1', manoeuvre='GAUCHE',
@@ -27,6 +29,7 @@ class RedemarrageTest(unittest.TestCase):
         client.sendall.assert_called_with(b'ATTENTE\n')
 
     def test_files_au_vert_sans_chevauchement_et_sans_blocage(self):
+        """Vérifie que les files se vident au vert sans recouvrement."""
         for largeur, hauteur in ((700, 500), (1000, 600), (1400, 500)):
             geometrie = (largeur * .05, largeur * .95, largeur / 2,
                          hauteur * .47, hauteur * .94, min(largeur, hauteur) * .2)
@@ -67,6 +70,7 @@ class RedemarrageTest(unittest.TestCase):
                                         [(v.nom, v.progression) for v in voitures])
 
     def test_croisement_oppose_ne_bloque_pas_les_voitures_face_a_face(self):
+        """Vérifie que les véhicules venant en sens opposés terminent leurs trajets."""
         geometrie = (50, 950, 500, 282, 564, 120)
         for manoeuvres in (('GAUCHE', 'GAUCHE'), ('GAUCHE', 'TOUT_DROIT'), ('GAUCHE', 'DROITE'),
                            ('TOUT_DROIT', 'TOUT_DROIT')):
@@ -93,6 +97,7 @@ class RedemarrageTest(unittest.TestCase):
                                 [v.progression for v in voitures])
 
     def test_arrivee_au_rouge_verifie_le_contour_avant_de_placer_sur_la_ligne(self):
+        """Vérifie le contour de la voiture avant son placement près du feu rouge."""
         geometrie = (47, 893, 470, 272.6, 545.2, 116)
         for direction, progression in (('O', 37), ('E', 37), ('S', 38), ('N', 38)):
             with self.subTest(direction=direction):
@@ -124,6 +129,7 @@ class RedemarrageTest(unittest.TestCase):
                 self.assertEqual(30, suivante.progression)
 
     def test_urgence_au_sud_laisse_sortir_la_voiture_deja_engagee_a_est(self):
+        """Vérifie qu'une urgence au sud laisse finir un passage commencé à l'est."""
         from client.client_vehicule import prochaine_position
 
         geometrie = (47, 893, 470, 272.6, 545.2, 116)

@@ -18,7 +18,9 @@ from client.vehicule import Vehicule
 
 
 class TraficTTest(unittest.TestCase):
+    """Vérifie les itinéraires autorisés et l'indépendance des deux carrefours."""
     def test_tous_les_trajets_autorises_restent_visibles_jusqua_la_sortie(self):
+        """Vérifie les poses des six trajets du T sur toute leur progression."""
         etat = EtatCarrefour(type_carrefour='T')
         self.assertEqual({'S', 'E', 'O'}, set(etat.trajets))
         geometrie = (50, 950, 500, 282, 564, 120)
@@ -34,6 +36,7 @@ class TraficTTest(unittest.TestCase):
         self.assertEqual(6, trajets)
 
     def test_generateur_utilise_uniquement_les_trajets_fournis_par_le_serveur(self):
+        """Vérifie que le générateur suit la liste des trajets reçue."""
         trajets = EtatCarrefour(type_carrefour='T').trajets
         choix = ('DROITE', 'TOUT_DROIT', 'TOUT_DROIT', 'GAUCHE', 'GAUCHE', 'DROITE')
         with patch('client.voiture.get_trajets', return_value=trajets), \
@@ -47,6 +50,7 @@ class TraficTTest(unittest.TestCase):
             self.assertEqual('T', carrefour)
 
     def test_serveur_refuse_un_trajet_nord_sur_le_t(self):
+        """Vérifie le rejet des manœuvres vers ou depuis une branche absente."""
         etat = EtatCarrefour(type_carrefour='T')
         serveur = ServeurCarrefour(etat)
         for direction, manoeuvre in (('N', 'TOUT_DROIT'), ('S', 'TOUT_DROIT'),
@@ -61,6 +65,7 @@ class TraficTTest(unittest.TestCase):
             self.assertEqual('ROUGE', etat.feux['N'])
 
     def test_protocole_separe_les_vehicules_feux_et_passages(self):
+        """Vérifie sur TCP que le trafic du T ne modifie pas l'état de la croix."""
         croix = EtatCarrefour()
         etat_t = EtatCarrefour(type_carrefour='T')
         serveur = ServeurCarrefour(croix, host='127.0.0.1', port=0, etat_t=etat_t)
@@ -105,6 +110,7 @@ class TraficTTest(unittest.TestCase):
             serveur.arreter()
 
     def test_generateurs_ambulances_ciblent_aussi_les_trajets_du_t(self):
+        """Vérifie la génération d'ambulances sur chacune des trois branches."""
         from client.urgence import main
 
         for direction, manoeuvre in (('S', 'DROITE'), ('E', 'GAUCHE'), ('O', 'TOUT_DROIT')):
@@ -119,6 +125,7 @@ class TraficTTest(unittest.TestCase):
                 simuler.assert_called_once_with('Ambulance-T-1', 'urgence', direction, manoeuvre, 'T')
 
     def test_urgence_manuelle_choisit_un_trajet_valide_par_defaut_a_est(self):
+        """Vérifie la manœuvre choisie pour une urgence à l'est sans trajet explicite."""
         from client.urgence import main
 
         with patch('sys.argv', ['urgence.py', 'Ambulance', 'E', '--carrefour', 'T']), \

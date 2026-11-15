@@ -20,6 +20,7 @@ class Perception:
     """Copie locale de l'etat du trafic recu par TCP."""
 
     def __init__(self, instantane):
+        """Reconstruit les véhicules, les feux et les distances à partir d'un instantané."""
         self.feux = dict(instantane['feux'])
         self.vehicules = {donnees['nom']: Vehicule(**donnees) for donnees in instantane['vehicules']}
         geometrie, haut = instantane['scene']
@@ -28,15 +29,19 @@ class Perception:
         self.distances = TrajectoireVehicule._distances_securite(geometrie, haut)
 
     def distance_securite(self, direction):
+        """Renvoie l'écart minimal en points de progression pour une entrée."""
         return self.distances[direction]
 
 
 class ConduiteVehicule:
+    """Applique les règles de conduite à un véhicule à partir d'un instantané local."""
     def __init__(self, perception):
+        """Associe le calcul de conduite à la perception courante du client."""
         self.etat = perception
 
     @staticmethod
     def _direction_a_droite(direction: str) -> str:
+        """Renvoie la branche située du côté droit d'une entrée."""
         return {"N": "E", "E": "S", "S": "O", "O": "N"}[direction]
 
     def _voie_sortie_occupee(self, vehicule: Vehicule, prochaine_position: int) -> bool:
@@ -257,6 +262,7 @@ def actualiser_affichage(vehicule, perception):
 
 
 def proposer_arrivee(nom, type_vehicule, direction, manoeuvre, instantane):
+    """Construit un véhicule sur un trajet valide à l'arrière de sa file."""
     if direction not in instantane['trajets'] or manoeuvre not in instantane['trajets'][direction]:
         raise ValueError('Trajet interdit pour ce carrefour')
     perception = Perception(instantane)
@@ -271,6 +277,7 @@ def proposer_arrivee(nom, type_vehicule, direction, manoeuvre, instantane):
 
 
 def position_depart_libre(vehicule, perception):
+    """Vérifie que le véhicule arrive derrière sa file avec un écart suffisant."""
     distance = perception.distance_securite(vehicule.direction)
     return all(autre.progression > vehicule.progression
                and vehicule.progression <= autre.progression - distance

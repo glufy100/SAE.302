@@ -29,6 +29,7 @@ class VueCarrefourBase(QWidget):
     CONTOUR_VEHICULE = 1
 
     def __init__(self, etat: EtatCarrefour):
+        """Associe la vue à l'état partagé et fixe sa taille minimale."""
         if not isinstance(etat, EtatCarrefour):
             raise TypeError("etat doit etre une instance de EtatCarrefour")
         super().__init__()
@@ -40,6 +41,7 @@ class VueCarrefourBase(QWidget):
         return GEOMETRIE_SCENE
 
     def _etat_affichage(self, geometrie, haut_stem=None):
+        """Copie les feux et les véhicules sous verrou pour le prochain dessin."""
         with self.etat.verrou:
             return dict(self.etat.feux), [replace(v) for v in self.etat.vehicules.values()]
 

@@ -32,8 +32,10 @@ Les dossiers `server/` et `client/` fonctionnent separement. Chaque machine peut
 ## 3. Structure du projet
 
 ```text
-SAE302/
+SAE.302/
 ├── README.md
+├── Bilan_Projet.pdf
+├── IAGraphie.pdf
 ├── lancer_simulation.sh
 ├── Stack_Technique.md
 ├── requirements.txt
@@ -186,7 +188,7 @@ Chaque message se termine par un retour a la ligne. Le premier `|` separe la com
 | `IDENTITE` | Rapport JSON calcule par le client | `OK` ou `REESSAYER` |
 | `POSITION` | Rapport JSON calcule par le client | `OK` ou `REESSAYER` |
 | `URGENCE` | Aucun, apres inscription | `PASSAGE_AUTORISE` |
-| `ETAT` | Aucun, apres inscription | `FEU|direction|couleur` |
+| `ETAT` | Aucun, apres inscription | `FEU\|direction\|couleur` |
 | `TERMINE` | Aucun, apres progression 100 | `OK` |
 
 Un rapport contient `revision` et `vehicule`. Le vehicule porte son identite, son trajet, sa progression, ses indicateurs de conduite, son temps d'attente et `position_affichage` : `[x, y, angle, longueur, largeur]`.

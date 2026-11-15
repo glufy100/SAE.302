@@ -25,7 +25,9 @@ from server.model.Vehicule import Vehicule
 
 
 class SeparationTest(unittest.TestCase):
+    """Teste les échanges TCP, l'autonomie des rôles et la persistance SQLite."""
     def serveur(self):
+        """Démarre un serveur de test sur un port local libre et planifie son arrêt."""
         etat = EtatCarrefour()
         serveur = ServeurCarrefour(etat, host='127.0.0.1', port=0)
         serveur.demarrer()
@@ -34,11 +36,13 @@ class SeparationTest(unittest.TestCase):
 
     @contextmanager
     def connexion(self, serveur):
+        """Ouvre puis ferme une connexion et son lecteur de lignes UTF-8."""
         with socket.create_connection(('127.0.0.1', serveur.port), timeout=10) as client:
             with client.makefile('r', encoding='utf-8') as lecteur:
                 yield client, lecteur
 
     def inscrire(self, connexion, nom, direction, manoeuvre='TOUT_DROIT', position=None):
+        """Publie l'identité d'une voiture et vérifie son acceptation par le serveur."""
         client, lecteur = connexion
         instantane = reseau.recevoir_instantane(client, lecteur)
         voiture = proposer_arrivee(nom, 'voiture', direction, manoeuvre, instantane)
@@ -49,10 +53,12 @@ class SeparationTest(unittest.TestCase):
         return voiture
 
     def test_client_gere_sa_position_au_feu(self):
+        """Vérifie que le client s'arrête au rouge et progresse au vert."""
         self.assertEqual(LIGNE_ARRET, reseau.prochaine_position(LIGNE_ARRET, 'ROUGE'))
         self.assertEqual(LIGNE_ARRET + 1, reseau.prochaine_position(LIGNE_ARRET, 'VERT'))
 
     def test_client_signale_une_connexion_impossible(self):
+        """Vérifie que l'échec TCP est signalé et qu'aucun passage n'est annoncé."""
         with patch('client.client_vehicule.socket.create_connection', side_effect=OSError('serveur absent')):
             with redirect_stdout(io.StringIO()) as sortie:
                 reseau.simuler_vehicule('Test', 'voiture', 'N', 'TOUT_DROIT')
@@ -60,6 +66,7 @@ class SeparationTest(unittest.TestCase):
         self.assertNotIn('a traverse', sortie.getvalue())
 
     def test_serveur_enregistre_exactement_la_pose_calculee_par_le_client(self):
+        """Vérifie que le serveur conserve la pose publiée par le client."""
         etat, serveur = self.serveur()
         with self.connexion(serveur) as connexion:
             self.inscrire(connexion, 'Test', 'N', 'DROITE')
@@ -76,6 +83,7 @@ class SeparationTest(unittest.TestCase):
             self.assertFalse(hasattr(serveur, '_preparer_depassement'))
 
     def test_deux_clients_calculent_leur_place_et_reevaluent_un_etat_ancien(self):
+        """Vérifie qu'une seconde arrivée doit recalculer sa place à partir d'un nouvel état."""
         etat, serveur = self.serveur()
         with self.connexion(serveur) as c1, self.connexion(serveur) as c2:
             initial = reseau.recevoir_instantane(*c1)
@@ -92,6 +100,7 @@ class SeparationTest(unittest.TestCase):
             self.assertEqual(second.progression, etat.vehicules['Second'].progression)
 
     def test_deux_mouvements_concurrents_sont_recalcules_cote_client(self):
+        """Vérifie qu'un mouvement concurrent attend si la révision a changé."""
         etat, serveur = self.serveur()
         with self.connexion(serveur) as c1, self.connexion(serveur) as c2:
             self.inscrire(c1, 'Nord', 'N', 'GAUCHE', position=30)
@@ -113,6 +122,7 @@ class SeparationTest(unittest.TestCase):
             self.assertEqual(30, etat.vehicules['Sud'].progression)
 
     def test_feu_modifie_invalide_la_proposition_client(self):
+        """Vérifie qu'un changement de feu invalide un mouvement préparé au vert."""
         etat, serveur = self.serveur()
         with self.connexion(serveur) as connexion:
             self.inscrire(connexion, 'Test', 'N', position=30)
@@ -128,6 +138,7 @@ class SeparationTest(unittest.TestCase):
             self.assertFalse(proposition.engagee)
 
     def test_client_copie_seul_fonctionne_sans_pyside_ni_dossier_serveur(self):
+        """Exécute un client isolé avec la seule bibliothèque standard."""
         etat, serveur = self.serveur()
         with tempfile.TemporaryDirectory() as dossier:
             destination = Path(dossier) / 'client'
@@ -149,6 +160,7 @@ assert not any(n.startswith(('PySide6', 'server')) for n in sys.modules)
             self.assertEqual(1, etat.passages_termines)
 
     def test_clients_concurrents_et_urgence_terminent_leurs_trajets(self):
+        """Vérifie le passage de deux voitures et d'une urgence connectées en parallèle."""
         etat, serveur = self.serveur()
         with patch('client.client_vehicule.HOST', '127.0.0.1'), \
              patch('client.client_vehicule.PORT', serveur.port), \
@@ -166,6 +178,7 @@ assert not any(n.startswith(('PySide6', 'server')) for n in sys.modules)
         self.assertEqual(1, etat.urgences_traitees)
 
     def test_attente_immobile_ne_change_pas_la_version_du_trafic(self):
+        """Vérifie que l'ajout d'un délai d'attente seul conserve la révision."""
         etat, serveur = self.serveur()
         etat.changer_feux('E')
         with self.connexion(serveur) as c1, self.connexion(serveur) as c2:
@@ -182,6 +195,7 @@ assert not any(n.startswith(('PySide6', 'server')) for n in sys.modules)
             self.assertEqual(['OK'], reseau.publier(*c2, 'POSITION', approche, instantane['revision']))
 
     def test_serveur_copie_seul_ne_depend_pas_des_modules_de_calcul_client(self):
+        """Vérifie que le serveur s'importe après copie de son seul dossier."""
         with tempfile.TemporaryDirectory() as dossier:
             destination = Path(dossier) / 'server'
             shutil.copytree(Path(__file__).resolve().parents[1] / 'server', destination,
@@ -199,6 +213,7 @@ assert not any(n == 'client' or n.startswith('client.') for n in sys.modules)
             self.assertEqual(0, resultat.returncode, resultat.stderr)
 
     def test_passage_enregistre_dans_sqlite(self):
+        """Vérifie les valeurs écrites en base après un passage terminé."""
         with tempfile.TemporaryDirectory() as dossier:
             chemin = Path(dossier) / 'carrefour.sqlite3'
             etat = EtatCarrefour(BaseDonnees(chemin))
@@ -209,6 +224,7 @@ assert not any(n == 'client' or n.startswith('client.') for n in sys.modules)
             self.assertEqual([('voiture', 'N', .16)], passages)
 
     def test_ancienne_table_sqlite_reste_intacte(self):
+        """Vérifie que l'ouverture d'une ancienne base conserve ses données."""
         with tempfile.TemporaryDirectory() as dossier:
             chemin = Path(dossier) / 'carrefour.sqlite3'
             with sqlite3.connect(chemin) as connexion:
@@ -221,6 +237,7 @@ assert not any(n == 'client' or n.startswith('client.') for n in sys.modules)
                 self.assertEqual(('S',), connexion.execute('SELECT direction FROM circulation').fetchone())
 
     def test_echec_sqlite_ne_compte_pas_le_passage(self):
+        """Vérifie que le compteur reste intact si l'écriture échoue."""
         with tempfile.TemporaryDirectory() as dossier:
             chemin = Path(dossier) / 'carrefour.sqlite3'
             with sqlite3.connect(chemin) as connexion:

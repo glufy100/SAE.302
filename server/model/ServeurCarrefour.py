@@ -14,6 +14,7 @@ class ServeurCarrefour:
     """Gere les connexions ; les decisions de conduite appartiennent aux clients."""
 
     def __init__(self, etat: EtatCarrefour, host=BIND_HOST, port=PORT, etat_t=None):
+        """Associe les états des carrefours et prépare l'écoute TCP."""
         if not isinstance(etat, EtatCarrefour):
             raise TypeError("etat doit etre une instance de EtatCarrefour")
         self.etat, self.host, self.port = etat, host, port
@@ -26,6 +27,7 @@ class ServeurCarrefour:
         self.arret = threading.Event()
 
     def demarrer(self):
+        """Ouvre le port d'écoute et démarre le thread d'acceptation."""
         self.socket_serveur = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.socket_serveur.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         try:
@@ -39,6 +41,7 @@ class ServeurCarrefour:
         threading.Thread(target=self._accepter_clients, daemon=True).start()
 
     def _accepter_clients(self):
+        """Lance un thread pour chaque connexion TCP acceptée."""
         while not self.arret.is_set():
             try:
                 client, _ = self.socket_serveur.accept()
@@ -48,6 +51,7 @@ class ServeurCarrefour:
 
     @staticmethod
     def _envoyer(client, message):
+        """Envoie une ligne UTF-8 terminée par un saut de ligne."""
         client.sendall((message + '\n').encode('utf-8'))
 
     @staticmethod
@@ -78,6 +82,10 @@ class ServeurCarrefour:
         return revision, voiture
 
     def _enregistrer_rapport(self, contenu, precedente=None):
+        """Valide l'identité et publie l'état sous verrou.
+
+        Renvoie None si la révision a changé et que le client doit recalculer.
+        """
         revision, voiture = self._lire_rapport(contenu)
         with self.etat.verrou:
             if precedente is not None:
@@ -113,6 +121,7 @@ class ServeurCarrefour:
         return voiture
 
     def _gerer_client(self, client):
+        """Traite les commandes d'une connexion et retire le véhicule à la fermeture."""
         vehicule = None
         gestionnaire = self
         try:
@@ -177,6 +186,7 @@ class ServeurCarrefour:
                 gestionnaire.etat.notifier()
 
     def arreter(self):
+        """Signale l'arrêt du serveur et ferme la socket d'écoute."""
         self.arret.set()
         if self.socket_serveur:
             try:
